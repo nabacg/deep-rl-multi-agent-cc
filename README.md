@@ -1,7 +1,7 @@
 # deep-rl-multi-agent-cc
 This repository contains code demonstrating how to implement Deep Reinforcement Learning techniques to solve a Unity ML-Agents environment where a goal is to train an agent to solve the variation of [Tennis environment](https://github.com/Unity-Technologies/ml-agents/blob/master/docs/Learning-Environment-Examples.md#tennis), where the 2 agents control their rackets separately and their goal is to keep the ball from touchnig the floor for as long as possible. It's a great example of multi agent environment where agents are required to cooperate in order to solve the problem. Its also an example of continuous control, where Action space consists of 2 floating point numbers.
 
-Solution involves implementation of Multi Agent Deep Deterministic Policy Gradient or MADDPG as described in [OpenAI publication](https://papers.nips.cc/paper/7217-multi-agent-actor-critic-for-mixed-cooperative-competitive-environments.pdf) as an example of actor-critic, model-free reinforcment learning algorithms suitable for problems with continuous action space.
+Solution involves variation of Multi Agent Deep Deterministic Policy Gradient or MADDPG as described in [OpenAI publication](https://papers.nips.cc/paper/7217-multi-agent-actor-critic-for-mixed-cooperative-competitive-environments.pdf) with a single centralized Critic network. MADDPG is as an example of actor-critic, model-free reinforcment learning algorithms suitable for problems with continuous action space.
 
 Implementation using Python 3, PyTorch, Unity ML-Agents.
 
