@@ -56,18 +56,24 @@ class DdpgCritic:
         self.critic_optimizer = optim.Adam(self.critic_train.parameters(), lr=critic_lr, weight_decay=weight_decay)
 
 
-        self.critic_loss = 0
+
         self.checkpoint_dir   = checkpoint_dir
         self.critic_weights = self.checkpoint_dir + "/" + "critic.pth"
 
-    def learn(self, experiences, target_actions_pred):
+
+
+
+    def learn(self, experiences, actor):
 
         states, actions, rewards, next_states, dones = experiences
+        
+       
+        ## DDPG  implementation 
         #### Critic network training
 
         # Calculate Q_Targets
         # first use target Actor to predict best next actions for next states S'
-        # target_actions_pred = self.actor_target(next_states)
+        target_actions_pred = actor.actor_target(next_states)
         # Then use target critic to asses Q value of this (S', pred_action) tuple
         target_pred = self.critic_target(next_states, target_actions_pred)
         # calculate the Q_target using TD error formula   
@@ -80,11 +86,28 @@ class DdpgCritic:
         # do Gradient Descent step on Critic train network by minimizing diff between (Q_pred, Q_target)
         self.critic_optimizer.zero_grad()
         critic_loss = F.mse_loss(Q_pred, Q_target)
-        self.critic_loss = critic_loss.item()
+        actor.critic_loss = critic_loss.data
         critic_loss.backward()
         self.critic_optimizer.step()
-
+        
+        #### Actor network training
+        # find wich action does Actor train predict
+        actions_pred = actor.actor_train(states)
+        # Loss is negative of Critic_train Q estimate of (S,  actions_pred)
+        # i.e. we want to maximize (minimize the negative) of action state Value function (Q) prediction by critic_train 
+        # for current state and next action predicted by actor_train
+        actor_loss = -self.critic_train(states, actions_pred).mean()
+        
+        actor.actor_loss = actor_loss.data
+        # minimize Actor loss
+        # do Gradient Descent step on Actor train network
+        actor.actor_optimizer.zero_grad()
+        actor_loss.backward()
+        actor.actor_optimizer.step()
+        
+        # ------------------- update target network ------------------- #
         soft_update(self.critic_train, self.critic_target, self.tau)
+        soft_update(actor.actor_train, actor.actor_target, self.tau)
 
 
     def load_checkpoint(self, file_prefix=None):
@@ -103,7 +126,9 @@ class DdpgCritic:
 
 class DdpgActor:
     
-    def __init__(self, state_size, action_size, 
+    def __init__(self, 
+                state_size, 
+                action_size, 
                  seed, 
                  batch_size,
                  actor_lr, 
@@ -124,9 +149,9 @@ class DdpgActor:
             num_agents (int): how many agents are running in each step
             seed (int): random seed
             batch_size (int): how many experience tuples to process at once
-            buffer_size (int): size of experience buffer
             actor_lr (float): actor learning rate alpha
-            critic_lr (float): critic learning rate alpha
+            experience_buffer (ReplayBuffer): experience replay buffer
+            critic (DdpgCritic): Critic instance
             weight_decay (float): rate of nn weight decay for critic network
             tau (float): soft update rate for synchronizing target and train network weights 
             update_every (int): how many env steps to train agent
@@ -137,9 +162,6 @@ class DdpgActor:
         self.seed = torch.manual_seed(seed)
         self.batch_size = batch_size
         self.tau = tau
-        
-        
-        
         self.update_every = update_every
         self.gamma = gamma 
         self.device = device
@@ -158,7 +180,7 @@ class DdpgActor:
         self.actor_optimizer  = optim.Adam(self.actor_train.parameters(), lr=actor_lr)
         
         # init Noise process
-        self.noise = OUNoise(action_size, seed,  theta=0.25, sigma=0.6)
+        self.noise = OUNoise(action_size, seed,  theta=0.15, sigma=0.2)
         
         # # init Replay Buffer
         # self.memory = ReplayBuffer(action_size= action_size, 
@@ -170,6 +192,7 @@ class DdpgActor:
         self.memory = experience_buffer
         self.critic = critic
         self.step_counter = 0
+        self.critic_loss = 0
         self.actor_loss = 0
         
         
@@ -198,52 +221,61 @@ class DdpgActor:
         self.actor_train.train()
         
         if add_noise:
-            actions += self.noise.sample()*noise_decay
+            if self.step_counter < 5000:
+                actions += np.random.standard_normal(self.noise.size)
+            else:
+                actions += self.noise.sample()*noise_decay
         return np.clip(actions, -1, 1)
     
-    def step(self ):
+    def step(self):
         self.step_counter += 1
         if len(self.memory) >= self.batch_size:
-            self.learn(self.memory.sample())
+            for _ in range(5):
+                self.critic.learn(self.memory.sample(), self)
     
-    def learn(self, experiences):
-        """Update value parameters using given batch of experience tuples.
+    # def step(self ):
+    #     self.step_counter += 1
+    #     if len(self.memory) >= self.batch_size:
+    #         self.learn(self.memory.sample())
+    
+    # def learn(self, experiences):
+    #     """Update value parameters using given batch of experience tuples.
 
-        Params
-        ======
-            experiences (Tuple[torch.Variable]): tuple of (s, a, r, s', done) tuples
-            gamma (float): discount factor
-        """
-        states, actions, rewards, next_states, dones = experiences
+    #     Params
+    #     ======
+    #         experiences (Tuple[torch.Variable]): tuple of (s, a, r, s', done) tuples
+    #         gamma (float): discount factor
+    #     """
+    #     states, actions, rewards, next_states, dones = experiences
         
        
-        ## DDPG  implementation 
-        #### Critic network training
+    #     ## DDPG  implementation 
+    #     #### Critic network training
 
-        # Calculate Q_Targets
-        # first use target Actor to predict best next actions for next states S'
-        target_actions_pred = self.actor_target(next_states)
+    #     # Calculate Q_Targets
+    #     # first use target Actor to predict best next actions for next states S'
+    #     target_actions_pred = self.actor_target(next_states)
 
-        self.critic.learn(experiences, target_actions_pred)
+    #     self.critic.learn(experiences, target_actions_pred)
 
-        #### Actor network training
-        # find wich action does Actor train predict
-        actions_pred = self.actor_train(states)
-        # Loss is negative of Critic_train Q estimate of (S,  actions_pred)
-        # i.e. we want to maximize (minimize the negative) of action state Value function (Q) prediction by critic_train 
-        # for current state and next action predicted by actor_train
-        actor_loss = -self.critic.infer(states, actions_pred).mean()
+    #     #### Actor network training
+    #     # find wich action does Actor train predict
+    #     actions_pred = self.actor_train(states)
+    #     # Loss is negative of Critic_train Q estimate of (S,  actions_pred)
+    #     # i.e. we want to maximize (minimize the negative) of action state Value function (Q) prediction by critic_train 
+    #     # for current state and next action predicted by actor_train
+    #     actor_loss = -self.critic.infer(states, actions_pred).mean()
         
-        self.actor_loss = actor_loss.item()
-        # minimize Actor loss
-        # do Gradient Descent step on Actor train network
-        self.actor_optimizer.zero_grad()
-        actor_loss.backward()
-        self.actor_optimizer.step()
+    #     self.actor_loss = actor_loss.item()
+    #     # minimize Actor loss
+    #     # do Gradient Descent step on Actor train network
+    #     self.actor_optimizer.zero_grad()
+    #     actor_loss.backward()
+    #     self.actor_optimizer.step()
         
-        # ------------------- update target network ------------------- #
+    #     # ------------------- update target network ------------------- #
         
-        soft_update(self.actor_train, self.actor_target, self.tau)
+    #     soft_update(self.actor_train, self.actor_target, self.tau)
         
         
         

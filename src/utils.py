@@ -74,15 +74,15 @@ def plot_scores_losses(scores, mean_scores, actors_losses, critic_losses):
     plt.show()
 
 
-def train_agent(agents, env, file_prefix, print_metrics_every=10,
+def train_agent(agents,  memory, env, file_prefix, print_metrics_every=10,
         target_mean_score=0.5, n_episodes = 1000, eps_decay=0.99, 
         eps_end=0.01,  score_aggregate = np.mean):
     brain_name = env.brain_names[0]
     brain = env.brains[brain_name]
    
     num_agents = len(agents)
-
-    memory = agents[0].memory
+    
+    # memory = agents[0].memory
     scores = []
     mean_scores = []
     actor_losses = [[] for _ in agents]
@@ -112,12 +112,13 @@ def train_agent(agents, env, file_prefix, print_metrics_every=10,
                 for (s, a, r, s_next, d) 
                     in zip(states, actions, rewards, next_states, dones)]
             [a.step() for a in agents] 
-            [a.step() for a in agents] 
+            # [a.step() for a in agents] 
+            
                     
             for (i,a) in enumerate(agents):
                 actor_losses[i].append(a.actor_loss) 
-            
-            critic_losses.append(agents[0].critic.critic_loss) # the other one would be overwritten anyways
+                critic_losses.append(a.critic_loss)
+                
             score += rewards                              # update the score
             states = next_states                             # roll over the state to next time step
             done = np.any(dones)
