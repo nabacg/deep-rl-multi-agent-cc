@@ -3,10 +3,10 @@ import os
 import sys
 import numpy as np
 import torch 
-from ddpg_agent import DdpgAgent
-from utils import train_agent, test_agent, plot_scores_losses
+from ddpg_agent import DdpgActor, DdpgCritic
+from replaybuffers import ReplayBuffer
+from utils import train_agent, plot_scores_losses, test_agent
 from unityagents import UnityEnvironment
-
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -54,27 +54,50 @@ if __name__ == "__main__":
     UPDATE_EVERY = 1        # how often to update the network
     WEIGHT_DECAY = 0
 
+
+    hidden_1_size = 512
+    hidden_2_size = 256
+
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-    agent = DdpgAgent(state_size  = state_size, 
+    experience_buffer = ReplayBuffer(action_size, BUFFER_SIZE, BATCH_SIZE, seed=2, device = device)
+    critic = DdpgCritic(state_size  = state_size, 
+                        action_size = action_size, 
+                        seed=2, 
+                        critic_lr=LR_CRITIC,
+                        weight_decay=WEIGHT_DECAY,
+                        tau=TAU,
+                        update_every=UPDATE_EVERY,
+                        gamma = GAMMA,
+                        device = device,
+                        hidden_1_size = hidden_1_size,
+                        hidden_2_size = hidden_2_size,
+                        checkpoint_dir = "critic"
+                    )
+    agents = [ DdpgActor(state_size  = state_size, 
                     action_size = action_size, 
-                    num_agents = num_agents,
                     seed=2,
                     batch_size=BATCH_SIZE,
-                    buffer_size=BUFFER_SIZE,
                     actor_lr=LR_ACTOR,
-                    critic_lr=LR_CRITIC,
+                    experience_buffer = experience_buffer,
+                    critic = critic,
                     weight_decay=WEIGHT_DECAY,
                     tau=TAU,
                     update_every=UPDATE_EVERY,
                     gamma = GAMMA,
                     device = device,
-                    checkpoint_dir = "checkpoints")
+                    hidden_1_size = hidden_1_size,
+                    hidden_2_size = hidden_2_size,
+                    checkpoint_dir = "agent_{}".format(i)) 
+            for i in range(2)]
 
     if train_mode:
-        input_weights = args.input_weights_prefix 
-        train_agent(agent, env, args.output_weights, args.target_score, args.episodes, args.eps_decay, args.eps_end, input_weights)
+        scores, actor_losses, critic_losses =  train_agent(agents, experience_buffer,
+                      env, print_metrics_every= 100,
+                      target_mean_score=0.5, 
+                      file_prefix=args.output_weights_prefix, 
+                      n_episodes=args.episodes, score_aggregate=np.max)
     elif args.input_weights_prefix :
-        test_agent(agent, env, args.input_weights_prefix, args.episodes)
+        test_agent(agents, env, args.input_weights_prefix, args.episodes)
     else:
         print("Test mode requires providing input_weights path to existing file! ")

@@ -118,7 +118,7 @@ def train_agent(agents,  memory, env, file_prefix, print_metrics_every=10,
             for (i,a) in enumerate(agents):
                 actor_losses[i].append(a.actor_loss) 
                 critic_losses.append(a.critic_loss)
-                
+
             score += rewards                              # update the score
             states = next_states                             # roll over the state to next time step
             done = np.any(dones)
@@ -156,13 +156,18 @@ def test_agent(agent, env, weight_file_prefix, n_episodes):
         score = 0                                           # initialize the score
         done = False                                                                                   
         while not(done):                                 # exit loop if episode finished
-            actions =  agent.act(states)                 # select an action
+            actions =  np.vstack( [a.act(s, add_noise=True) for (a,s) in zip(agents, states[:]) ])                 # select an action
             # print(actions, actions.shape)
             env_info = env.step(actions)[brain_name]      # send the action to the environment
             next_states = env_info.vector_observations   # get the next state
             rewards = env_info.rewards                   # get the reward
-            dones = env_info.local_done                  # see if episode has finished
-            agent.step(states, actions, rewards, next_states, dones) 
+            dones = env_info.local_done                    # select an action
+            # print(actions, actions.shape)
+                
+            [memory.add(s, a, r, s_next, d) 
+                for (s, a, r, s_next, d) 
+                    in zip(states, actions, rewards, next_states, dones)]
+            [a.step() for a in agents] 
 
             score += np.mean(rewards)                           # update the score
             states = next_states                             # roll over the state to next time step
