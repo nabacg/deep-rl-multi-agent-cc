@@ -6,7 +6,7 @@ Solution involves implementation of Multi Agent Deep Deterministic Policy Gradie
 Implementation using Python 3, PyTorch, Unity ML-Agents.
 
 ## Tennis environment 
-<img src="https://github.com/nabacg/deep-rl-multi-agent-cc/blob/master/images/tennis-env.gif?raw=true" width="360" height="240" border="10" />
+<img src="https://github.com/nabacg/deep-rl-multi-agent-cc/blob/master/images/tennis_env.gif?raw=true" width="360" height="240" border="10" />
 
 - Set-up: Two-player game where agents control rackets to bounce ball over a net.
 - Goal: The agents must bounce ball between one another while not dropping or sending ball out of bounds.
