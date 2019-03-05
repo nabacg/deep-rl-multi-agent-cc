@@ -5,8 +5,8 @@ Solution involves implementation of Multi Agent Deep Deterministic Policy Gradie
 
 Implementation using Python 3, PyTorch, Unity ML-Agents.
 
-## Reacher environment 
-<img src="https://github.com/nabacg/deep-rl-continuous-control/blob/master/images/reacher-env.gif?raw=true" width="360" height="240" border="10" />
+## Tennis environment 
+<img src="https://github.com/nabacg/deep-rl-multi-agent-cc/blob/master/images/tennis-env.gif?raw=true" width="360" height="240" border="10" />
 
 - Set-up: Two-player game where agents control rackets to bounce ball over a net.
 - Goal: The agents must bounce ball between one another while not dropping or sending ball out of bounds.
@@ -38,8 +38,8 @@ Before running the code you'll need to install following python modules
 Easiest way to install all dependencies is using [Anaconda](https://www.anaconda.com/distribution/). Install Anaconda for Python 3 using installer appropriate for your OS and once ready clone this repository and environment.yml file inside it.
 
 ```bash
-git clone https://github.com/nabacg/deep-rl-continuous-control.git
-cd deep-rl-continuous-control
+git clone https://github.com/nabacg/deep-rl-multi-agent-cc.git
+cd deep-rl-multi-agent-cc
 conda env create -f environment.yml
 
 ```
@@ -53,16 +53,16 @@ conda activate drl_nav
 For this project, you will not need to install Unity - this is because we have already built the environment for you, and you can download it from one of the links below. You need only select the environment that matches your operating system:
 
 
-- Linux: ["click here"](href="https://s3-us-west-1.amazonaws.com/udacity-drlnd/P2/Reacher/Reacher_Linux.zip)
-- Mac OSX: ["click here"](https://s3-us-west-1.amazonaws.com/udacity-drlnd/P2/Reacher/Reacher.app.zip)
-- Windows (32-bit): [click here](https://s3-us-west-1.amazonaws.com/udacity-drlnd/P2/Reacher/Reacher_Windows_x86.zip)
-- Windows (64-bit): [click here](https://s3-us-west-1.amazonaws.com/udacity-drlnd/P2/Reacher/Reacher_Windows_x86_64.zip)
+- Linux: ["click here"](href="https://s3-us-west-1.amazonaws.com/udacity-drlnd/P3/Tennis/Tennis_Linux.zip)
+- Mac OSX: ["click here"](https://s3-us-west-1.amazonaws.com/udacity-drlnd/P3/Tennis/Tennis.app.zip)
+- Windows (32-bit): [click here](https://s3-us-west-1.amazonaws.com/udacity-drlnd/P3/Tennis/Tennis_Windows_x86.zip)
+- Windows (64-bit): [click here](https://s3-us-west-1.amazonaws.com/udacity-drlnd/P3/Tennis/Tennis_Windows_x86_64.zip)
 
-Then, place the file in the root folder in the Deep-RL-Continuous-Control GitHub repository, and unzip (or decompress) the file.
+Then, place the file in the root folder in the deep-rl-multi-agent-cc GitHub repository, and unzip (or decompress) the file.
 
 (For Windows users) Check out this link if you need help with determining if your computer is running a 32-bit version or 64-bit version of the Windows operating system.
 
-(For AWS) If you'd like to train the agent on AWS (and have not enabled a virtual screen), then please use [this link](https://s3-us-west-1.amazonaws.com/udacity-drlnd/P2/Reacher/Reacher_NoVis.zip) to obtain the "headless" version of the environment. You will not be able to watch the agent without enabling a virtual screen, but you will be able to train the agent. (To watch the agent, you should follow the instructions to enable a virtual screen, and then download the environment for the Linux operating system above.)
+(For AWS) If you'd like to train the agent on AWS (and have not enabled a virtual screen), then please use [this link](https://s3-us-west-1.amazonaws.com/udacity-drlnd/P3/Tennis/Tennis_NoVis.zip) to obtain the "headless" version of the environment. You will not be able to watch the agent without enabling a virtual screen, but you will be able to train the agent. (To watch the agent, you should follow the instructions to enable a virtual screen, and then download the environment for the Linux operating system above.)
 
 # Instructions 
 
@@ -84,7 +84,7 @@ Then, place the file in the root folder in the Deep-RL-Continuous-Control GitHub
 In order to train DQN Agent using Jupyter notebooks provided, start jupyter in project folder:
 
 ```bash
-cd deep-rl-continuous-control
+cd deep-rl-multiagent
 jupyter notebook 
 ``` 
 
