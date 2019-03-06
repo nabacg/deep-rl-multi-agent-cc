@@ -78,7 +78,7 @@ class MADDPGAgent:
         self.actor_optimizer  = optim.Adam(self.actor_train.parameters(), lr=actor_lr)
         
         # init Noise process
-        self.noise = OUNoise(action_size, seed, theta=0.05, sigma=0.2)
+        self.noise = OUNoise(action_size, seed, theta=0.15, sigma=0.2)
 
         self.actor_loss = 0
         self.critic_loss = 0
@@ -114,8 +114,8 @@ class MADDPGAgent:
         self.actor_train.train()
         
         if add_noise:
-            # actions += self.noise.sample()*epsilon
-            actions += 0.5*np.random.standard_normal(self.action_size) *epsilon
+            actions += self.noise.sample()*epsilon
+            # actions += 0.5*np.random.standard_normal(self.action_size) *epsilon
         return np.clip(actions, -1, 1)
     
 
@@ -136,9 +136,10 @@ class MADDPGAgent:
         # first use target Actor to predict best next actions for next states S'
         # target_actions_pred = self.actor_target(next_states)
         # Then use target critic to asses Q value of this (S', pred_action) tuple
-        target_pred = self.critic_target(next_states, target_actions_pred)
+        with torch.no_grad():
+            target_pred = self.critic_target(next_states, target_actions_pred)
         # calculate the Q_target using TD error formula   
-        Q_target = rewards[:, self.agent_index] + (self.gamma * target_pred * (1 - dones[:, self.agent_index]))
+        Q_target = rewards[:, self.agent_index].view(-1, 1)  + (self.gamma * target_pred * (1 - dones[:, self.agent_index].view(-1, 1) ))
         
         # find what Q value does Critic train network assign to this (state, action) - current state, actual action performed        
         Q_pred = self.critic_train(states, actions)
@@ -146,9 +147,9 @@ class MADDPGAgent:
         # Minimize critic loss
         # do Gradient Descent step on Critic train network by minimizing diff between (Q_pred, Q_target)
         self.critic_optimizer.zero_grad()
-        critic_loss = F.mse_loss(Q_pred, Q_target)
-        self.critic_loss = critic_loss.item()
-        critic_loss.backward(retain_graph=True)
+        critic_loss = F.smooth_l1_loss(Q_pred, Q_target.detach())
+        self.critic_loss = critic_loss.cpu().detach().item()
+        critic_loss.backward()
         self.critic_optimizer.step()
         
         #### Actor network training
@@ -159,11 +160,11 @@ class MADDPGAgent:
         # for current state and next action predicted by actor_train
         actor_loss = -self.critic_train(states, actions_pred).mean()
         
-        self.actor_loss = actor_loss.item()
+        self.actor_loss = actor_loss.cpu().detach().item()
         # minimize Actor loss
         # do Gradient Descent step on Actor train network
         self.actor_optimizer.zero_grad()
-        actor_loss.backward(retain_graph=True)
+        actor_loss.backward()
         self.actor_optimizer.step()
         
         # ------------------- update target network ------------------- #

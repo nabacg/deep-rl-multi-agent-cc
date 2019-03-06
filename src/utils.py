@@ -83,17 +83,18 @@ def split_state(s, chunk_size):
     return [s[:, :chunk_size], s[:, chunk_size:]]
 
 
-def step(experiences, agents, actor_losses, critic_losses, state_size):
-    states, actions, rewards, next_states, dones = experiences
-    actor_target_predictions = torch.cat([a.actor_target(ns) 
+def step(memory, agents, actor_losses, critic_losses, state_size):
+    for (i,agent) in enumerate(agents):
+        states, actions, rewards, next_states, dones = memory.sample()
+        actor_target_predictions = torch.cat([a.actor_target(ns) 
                                     for (a,ns) in zip(agents, split_state(next_states, state_size))], dim=1)
-    actor_train_predictions = torch.cat([a.actor_train(s) 
+        actor_train_predictions = torch.cat([ a.actor_train(s) if a.agent_index == agent.agent_index else a.actor_train(s).detach()
                                     for (a,s) in zip(agents, split_state(states, state_size))], dim=1)
-    experiences = (states, actions, rewards, next_states, dones, actor_target_predictions, actor_train_predictions)
-    for (i,a) in enumerate(agents):
-        a.learn(experiences)
-        actor_losses[i].append(a.actor_loss)
-        critic_losses[i].append(a.critic_loss) 
+        experiences = (states, actions, rewards, next_states, dones, actor_target_predictions, actor_train_predictions)
+    
+        agent.learn(experiences)
+        actor_losses[i].append(agent.actor_loss)
+        critic_losses[i].append(agent.critic_loss) 
 
 def train_agent(agents, memory, env, action_size, batch_size, update_every,
          file_prefix, 
@@ -124,7 +125,7 @@ def train_agent(agents, memory, env, action_size, batch_size, update_every,
         score = np.zeros(num_agents)                                           # initialize the score
         done = False                                          
         while not(done):                                 # exit loop if episode finished
-            if i_episode < 0.1 * n_episodes:
+            if i_episode < 0.2 * n_episodes:
                 actions = np.random.standard_normal((num_agents, action_size))
             else:
                 actions   =  np.vstack( [a.act(s, add_noise=True, epsilon=eps) for (a,s) in zip(agents, states[:]) ])                 # select an action
@@ -145,7 +146,7 @@ def train_agent(agents, memory, env, action_size, batch_size, update_every,
             
             if len(memory) >= batch_size and step_counter % update_every == 0:
                 # train   
-                step(memory.sample(), agents, actor_losses, critic_losses, state_size)   
+                step(memory, agents, actor_losses, critic_losses, state_size)   
                 
             score += rewards                              # update the score
             states = next_states                             # roll over the state to next time step
