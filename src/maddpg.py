@@ -137,12 +137,12 @@ class MADDPGAgent:
         # target_actions_pred = self.actor_target(next_states)
         # Then use target critic to asses Q value of this (S', pred_action) tuple
         with torch.no_grad():
-            target_pred = self.critic_target(next_states, target_actions_pred)
+            target_pred = self.critic_target(next_states, target_actions_pred).to(self.device)
         # calculate the Q_target using TD error formula   
         Q_target = rewards[:, self.agent_index].view(-1, 1)  + (self.gamma * target_pred * (1 - dones[:, self.agent_index].view(-1, 1) ))
         
         # find what Q value does Critic train network assign to this (state, action) - current state, actual action performed        
-        Q_pred = self.critic_train(states, actions)
+        Q_pred = self.critic_train(states, actions).to(self.device)
         
         # Minimize critic loss
         # do Gradient Descent step on Critic train network by minimizing diff between (Q_pred, Q_target)
