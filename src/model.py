@@ -36,8 +36,8 @@ class CriticQNetwork(nn.Module):
         super(CriticQNetwork, self).__init__()
         self.seed = torch.manual_seed(seed)
         
-        self.fc_1 = nn.Linear(state_size, h_1_size)
-        self.fc_2 = nn.Linear(h_1_size + action_size, h_2_size)
+        self.fc_1 = nn.Linear(2*state_size, h_1_size)
+        self.fc_2 = nn.Linear(h_1_size + 2*action_size, h_2_size)
         self.output = nn.Linear(h_2_size, 1)
         
     def forward(self, state, action):
