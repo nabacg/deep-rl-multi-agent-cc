@@ -124,7 +124,7 @@ def train_agent(agents, memory, env, action_size, batch_size, update_every,
         score = np.zeros(num_agents)                                           # initialize the score
         done = False                                          
         while not(done):                                 # exit loop if episode finished
-            if i_episode < 0.2 * n_episodes:
+            if i_episode < 0.1 * n_episodes:
                 actions = np.random.standard_normal((num_agents, action_size))
             else:
                 actions   =  np.vstack( [a.act(s, add_noise=True, epsilon=eps) for (a,s) in zip(agents, states[:]) ])                 # select an action
