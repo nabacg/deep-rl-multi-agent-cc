@@ -17,6 +17,21 @@ Graph shows max of both agents accumulated rewards per episode (blue line) and m
 ![Plot of Critic network loss function](https://github.com/nabacg/deep-rl-multi-agent-cc/blob/master/images/061_critic_losses.png?raw=true)
 
 
+
+# Longer trained - 1.54 Mean score
+Same model trained for over 4000 epsiodes on GPU achieved 1.54 mean score!
+
+### Rewards per episode 
+Graph shows max of both agents accumulated rewards per episode (blue line) and mean of this score over 100 episode window (red line)
+![Plot of agent scores by episode](https://github.com/nabacg/deep-rl-multi-agent-cc/blob/master/images/154_solution_scores.png?raw=true)
+
+
+### Actors Loss function
+![Plot of Actor network loss function](https://github.com/nabacg/deep-rl-multi-agent-cc/blob/master/images/154_solution_actor_losses.png?raw=true)
+
+### Critics Loss function
+![Plot of Critic network loss function](https://github.com/nabacg/deep-rl-multi-agent-cc/blob/master/images/154_solution_critic_losses.png?raw=true)
+
 ## Learning Algorithm 
 
 This repository, specifically files below:
