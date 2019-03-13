@@ -91,8 +91,8 @@ class MADDPGAgent:
         
         
     def load_checkpoint(self, file_prefix=None):
-        actor_weights =  "{}/actor_{}.pth".format(file_prefix, self.agent_index)  if file_prefix else self.actor_weights
-        critic_weights = "{}/critic_{}.pth".format(file_prefix, self.agent_index)  if file_prefix else self.critic_weights
+        actor_weights =  "{}actor_{}.pth".format(file_prefix, self.agent_index)  if file_prefix else self.actor_weights
+        critic_weights = "{}critic_{}.pth".format(file_prefix, self.agent_index)  if file_prefix else self.critic_weights
 
         if os.path.isfile(actor_weights) and os.path.isfile(critic_weights):
             self.actor_target.load_state_dict(torch.load(actor_weights))
@@ -101,8 +101,8 @@ class MADDPGAgent:
             self.critic_train.load_state_dict(torch.load(critic_weights))
             
     def save_checkpoint(self, file_name=None):
-        actor_weights =  file_name + "_actor.pth"  if file_name else self.actor_weights
-        critic_weights = file_name + "_critic.pth" if file_name else self.critic_weights
+        actor_weights =  "{}actor_{}.pth".format(file_prefix, self.agent_index)  if file_name else self.actor_weights
+        critic_weights = "{}critic_{}.pth".format(file_prefix, self.agent_index) if file_name else self.critic_weights
         torch.save(self.actor_train.state_dict(), actor_weights)      
         torch.save(self.critic_train.state_dict(), critic_weights)  
 
